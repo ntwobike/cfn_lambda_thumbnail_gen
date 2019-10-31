@@ -1,0 +1,18 @@
+{
+  "name": "thumb_js",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "async": "^3.1.0",
+    "aws-sdk": "^2.560.0",
+    "fs": "0.0.1-security",
+    "gm": "^1.23.1",
+    "mktemp": "^1.0.0"
+  }
+}

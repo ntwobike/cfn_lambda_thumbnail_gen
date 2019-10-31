@@ -1,0 +1,85 @@
+AWSTemplateFormatVersion: 2010-09-09
+Resources:
+  Lambdafunc: 
+    Type: AWS::Lambda::Function
+    Properties: 
+      Handler: index.handler
+      Role: 
+        !GetAtt LambdaExecutionRole.Arn
+      Code: 
+        S3Bucket: 
+          Fn::ImportValue: S3BucketLambdaSrc
+        S3Key: thumbnail_gen.zip
+      Runtime: nodejs8.10
+      Environment:
+        Variables: 
+          DESTINATION_BUCKET: 
+            Fn::ImportValue: S3BucketDestinationName
+      Timeout: 100
+
+
+  LambdaExecutionRole:
+    Type: AWS::IAM::Role
+    Properties:
+      AssumeRolePolicyDocument:
+        Version: "2012-10-17"
+        Statement:
+          -
+            Effect: "Allow"
+            Principal:
+              Service:
+                - "lambda.amazonaws.com"
+            Action: 
+              - "sts:AssumeRole"
+  
+  S3BucketPolicy:
+    Type: AWS::IAM::Policy
+    Properties: 
+      PolicyName: "s3_access_lambda"
+      PolicyDocument: 
+        Version: "2012-10-17"
+        Statement: 
+          - Effect: Allow
+            Action:
+              - 'logs:CreateLogGroup'
+              - 'logs:CreateLogStream'
+              - 'logs:PutLogEvents'
+            Resource: 'arn:aws:logs:*:*:*'
+          - Effect: "Allow"
+            Action: "s3:*"
+            Resource: 
+              - Fn::Join:
+                - ""
+                - - "arn:aws:s3:::"
+                  - Fn::ImportValue: S3BucketSourceName
+              
+              - Fn::Join:
+                - ""
+                - - "arn:aws:s3:::"
+                  - Fn::ImportValue: S3BucketSourceName
+                  - "/*"
+              
+              - Fn::Join:
+                - ""
+                - - "arn:aws:s3:::"
+                  - Fn::ImportValue: S3BucketDestinationName
+              - Fn::Join:
+                - ""
+                - - "arn:aws:s3:::"
+                  - Fn::ImportValue: S3BucketDestinationName
+                  - "/*"
+      Roles: 
+        - !Ref LambdaExecutionRole
+
+Outputs:        
+  ThumbnailGeneratorLambdaArn: 
+    Value: !GetAtt Lambdafunc.Arn
+    Description: Arn of thumbnail generator lambda 
+    Export:
+      Name: "ThumbnailGeneratorLambdaArn"
+
+  ThumbnailGeneratorLambdaName: 
+    Value: !Ref Lambdafunc
+    Description: Name of thumbnail generator lambda 
+    Export:
+      Name: "ThumbnailGeneratorLambdaName"

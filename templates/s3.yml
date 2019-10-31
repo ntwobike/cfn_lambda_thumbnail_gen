@@ -1,0 +1,71 @@
+AWSTemplateFormatVersion: 2010-09-09
+Resources:
+  S3BucketSource:
+    Type: AWS::S3::Bucket
+    Properties:
+      NotificationConfiguration:
+        LambdaConfigurations:
+      PublicAccessBlockConfiguration:
+        BlockPublicAcls: true
+        IgnorePublicAcls: true
+        BlockPublicPolicy: true
+        RestrictPublicBuckets: true
+      
+  S3BucketDestination:
+    Type: AWS::S3::Bucket
+    Properties:
+      PublicAccessBlockConfiguration:
+        BlockPublicAcls: true
+        IgnorePublicAcls: true
+        BlockPublicPolicy: true
+        RestrictPublicBuckets: true
+
+  S3BucketLambdaSrc:
+    Type: AWS::S3::Bucket
+    Properties:
+      PublicAccessBlockConfiguration:
+        BlockPublicAcls: true
+        IgnorePublicAcls: true
+        BlockPublicPolicy: true
+        RestrictPublicBuckets: true
+      
+  # BucketPolicy:
+  #   Type: AWS::S3::BucketPolicy
+  #   Properties:
+  #     PolicyDocument:
+  #       Id: MyPolicy
+  #       Version: 2012-10-17
+  #       Statement:
+  #         - Sid: PublicReadForGetBucketObjects
+  #           Effect: Allow
+  #           Principal: '*'
+  #           Action: 's3:GetObject'
+  #           Resource: !Join 
+  #             - ''
+  #             - - 'arn:aws:s3:::'
+  #               - !Ref S3Bucket
+  #               - /*
+  #     Bucket: !Ref S3Bucket
+Outputs:
+  # WebsiteURL:
+  #   Value: !GetAtt 
+  #     - S3Bucket
+  #     - WebsiteURL
+  #   Description: URL for website hosted on S3
+  S3BucketSourceName: 
+    Value: !Ref S3BucketSource
+    Description: Name of S3 source bucket
+    Export:
+      Name: "S3BucketSourceName"
+
+  S3BucketDestinationName: 
+    Value: !Ref S3BucketDestination
+    Description: Name of S3 bucket of thumbnails
+    Export:
+      Name: "S3BucketDestinationName"
+
+  S3BucketLambdaSrc: 
+    Value: !Ref S3BucketLambdaSrc
+    Description: Name of S3 lambda src
+    Export:
+      Name: "S3BucketLambdaSrc"

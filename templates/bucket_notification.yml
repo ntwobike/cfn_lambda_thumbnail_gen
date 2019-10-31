@@ -1,0 +1,70 @@
+AWSTemplateFormatVersion: 2010-09-09
+Description: >-
+  Sample template to illustrate use of existing S3 bucket as event source for
+  Lambda function
+
+Resources:
+  LambdaInvokePermission:
+    Type: 'AWS::Lambda::Permission'
+    Properties:
+      FunctionName: 
+        Fn::ImportValue: ThumbnailGeneratorLambdaArn
+      Action: 'lambda:InvokeFunction'
+      Principal: s3.amazonaws.com
+      SourceAccount: !Ref 'AWS::AccountId'
+      SourceArn: 
+        Fn::Join:
+          - ""
+          - - "arn:aws:s3:::"
+            - Fn::ImportValue: S3BucketSourceName
+
+  LambdaIAMRole:
+    Type: 'AWS::IAM::Role'
+    Properties:
+      AssumeRolePolicyDocument:
+        Version: 2012-10-17
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service:
+                - lambda.amazonaws.com
+            Action:
+              - 'sts:AssumeRole'
+      Path: /
+      Policies:
+        - PolicyName: root
+          PolicyDocument:
+            Version: 2012-10-17
+            Statement:
+              - Effect: Allow
+                Action:
+                  - 's3:*'
+                Resource: '*'
+              - Effect: Allow
+                Action:
+                  - 'logs:CreateLogGroup'
+                  - 'logs:CreateLogStream'
+                  - 'logs:PutLogEvents'
+                Resource: 'arn:aws:logs:*:*:*'
+
+  CustomLambdaFunction:
+    Type: 'AWS::Lambda::Function'
+    Properties:
+      Handler: !Sub add_bucket_notification.lambda_handler
+      Role: !GetAtt LambdaIAMRole.Arn
+      Code:
+        S3Bucket: 
+          Fn::ImportValue: S3BucketLambdaSrc
+        S3Key: add_bucket_notification.py.zip
+      Runtime: python3.6
+      Timeout: 50
+
+  Lambdatrigger:
+    Type: 'Custom::RouteTableLambda'
+    DependsOn: LambdaInvokePermission
+    Properties:
+      ServiceToken: !GetAtt CustomLambdaFunction.Arn
+      LambdaArn: 
+        Fn::ImportValue: ThumbnailGeneratorLambdaArn
+      Bucket: 
+        Fn::ImportValue: S3BucketSourceName
